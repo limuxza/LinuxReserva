@@ -1,0 +1,175 @@
+local Linux = {}
+Linux.__index = Linux
+
+local TweenService = game:GetService("TweenService")
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+
+function Linux.new(parent, config)
+    local self = setmetatable({}, Linux)
+    
+    self.MainFrame = Instance.new("Frame")
+    self.MainFrame.Size = UDim2.new(0, 300, 0, 400)
+    self.MainFrame.Position = UDim2.new(0.5, -150, 0.5, -200)
+    self.MainFrame.BackgroundColor3 = Color3.fromRGB(8, 8, 8)
+    self.MainFrame.BorderSizePixel = 0
+    self.MainFrame.Visible = config.Visible or true
+    self.MainFrame.ZIndex = 10
+    self.MainFrame.BackgroundTransparency = config.Visible and 0 or 1
+    self.MainFrame.Active = true
+    self.MainFrame.Draggable = true
+    self.MainFrame.Parent = parent
+    
+    local UICorner = Instance.new("UICorner")
+    UICorner.CornerRadius = UDim.new(0, 4)
+    UICorner.Parent = self.MainFrame
+    
+    local UIPadding = Instance.new("UIPadding")
+    UIPadding.PaddingTop = UDim.new(0, 10)
+    UIPadding.PaddingLeft = UDim.new(0, 10)
+    UIPadding.PaddingRight = UDim.new(0, 10)
+    UIPadding.Parent = self.MainFrame
+    
+    local Title = Instance.new("TextLabel")
+    Title.Size = UDim2.new(1, 0, 0, 30)
+    Title.BackgroundTransparency = 1
+    Title.Text = string.upper(config.Title or "LINUX UI")
+    Title.TextColor3 = Color3.fromRGB(230, 230, 240)
+    Title.TextSize = 18
+    Title.Font = Enum.Font.SourceSansBold
+    Title.TextXAlignment = Enum.TextXAlignment.Left
+    Title.ZIndex = 11
+    Title.Parent = self.MainFrame
+    
+    local TopBarLine = Instance.new("Frame")
+    TopBarLine.Size = UDim2.new(1, -20, 0, 2)
+    TopBarLine.Position = UDim2.new(0, 10, 0, 30)
+    TopBarLine.BackgroundColor3 = Color3.fromRGB(26, 26, 28)
+    TopBarLine.BorderSizePixel = 0
+    TopBarLine.ZIndex = 11
+    TopBarLine.Parent = self.MainFrame
+    
+    self.UIListLayout = Instance.new("UIListLayout")
+    self.UIListLayout.Padding = UDim.new(0, 10)
+    self.UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    self.UIListLayout.VerticalAlignment = Enum.VerticalAlignment.Top
+    self.UIListLayout.Parent = self.MainFrame
+    
+    local UIScale = Instance.new("UIScale")
+    UIScale.Scale = 1
+    UIScale.Parent = self.MainFrame
+    
+    local screenGui = self.MainFrame.Parent
+    screenGui.ResetOnSpawn = false
+    
+    local toggleKey = config.ToggleKey or Enum.KeyCode.F4
+    UserInputService.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == toggleKey then
+            local targetTransparency = self.MainFrame.Visible and 1 or 0
+            local targetVisible = not self.MainFrame.Visible
+            TweenService:Create(self.MainFrame, TweenInfo.new(0.3), {BackgroundTransparency = targetTransparency}):Play()
+            for _, child in ipairs(self.MainFrame:GetDescendants()) do
+                if child:IsA("GuiObject") then
+                    TweenService:Create(child, TweenInfo.new(0.3), {BackgroundTransparency = targetTransparency, TextTransparency = targetTransparency}):Play()
+                end
+            end
+            self.MainFrame.Visible = targetVisible
+        end
+    end)
+    
+    return self
+end
+
+function Linux:CreateToggle(config)
+    local name = config.Name or "Toggle"
+    local default = config.Default or false
+    local callback = config.Callback
+    
+    local Toggle = Instance.new("TextButton")
+    Toggle.Size = UDim2.new(0, 280, 0, 40)
+    Toggle.Position = UDim2.new(0, 0, 0, 40)
+    Toggle.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    Toggle.BorderSizePixel = 0
+    Toggle.Text = string.upper(name)
+    Toggle.TextColor3 = Color3.fromRGB(200, 200, 200)
+    Toggle.TextSize = 16
+    Toggle.Font = Enum.Font.SourceSans
+    Toggle.ZIndex = 11
+    Toggle.Parent = self.MainFrame
+    
+    local UICorner = Instance.new("UICorner")
+    UICorner.CornerRadius = UDim.new(0, 4)
+    UICorner.Parent = Toggle
+    
+    local Indicator = Instance.new("Frame")
+    Indicator.Size = UDim2.new(0, 20, 0, 20)
+    Indicator.Position = UDim2.new(1, -30, 0.5, -10)
+    Indicator.BackgroundColor3 = default and Color3.fromRGB(0, 120, 255) or Color3.fromRGB(80, 80, 80)
+    Indicator.BorderSizePixel = 0
+    Indicator.ZIndex = 11
+    Indicator.Parent = Toggle
+    
+    local IndicatorUICorner = Instance.new("UICorner")
+    IndicatorUICorner.CornerRadius = UDim.new(0, 4)
+    IndicatorUICorner.Parent = Indicator
+    
+    local state = default
+    Toggle.MouseButton1Click:Connect(function()
+        state = not state
+        local tween = TweenService:Create(
+            Indicator,
+            TweenInfo.new(0.2),
+            {BackgroundColor3 = state and Color3.fromRGB(0, 120, 255) or Color3.fromRGB(80, 80, 80)}
+        )
+        tween:Play()
+        if callback then
+            callback(state)
+        end
+    end)
+    
+    return Toggle
+end
+
+function Linux:CreateButton(config)
+    local name = config.Name or "Button"
+    local callback = config.Callback
+    
+    local Button = Instance.new("TextButton")
+    Button.Size = UDim2.new(0, 280, 0, 40)
+    Button.Position = UDim2.new(0, 0, 0, 40)
+    Button.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
+    Button.BorderSizePixel = 0
+    Button.Text = string.upper(name)
+    Button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Button.TextSize = 16
+    Button.Font = Enum.Font.SourceSans
+    Button.ZIndex = 11
+    Button.Parent = self.MainFrame
+    
+    local UICorner = Instance.new("UICorner")
+    UICorner.CornerRadius = UDim.new(0, 4)
+    UICorner.Parent = Button
+    
+    Button.MouseButton1Click:Connect(function()
+        local tween = TweenService:Create(
+            Button,
+            TweenInfo.new(0.1),
+            {BackgroundColor3 = Color3.fromRGB(0, 100, 200)}
+        )
+        tween:Play()
+        tween.Completed:Connect(function()
+            TweenService:Create(
+                Button,
+                TweenInfo.new(0.1),
+                {BackgroundColor3 = Color3.fromRGB(0, 120, 255)}
+            ):Play()
+        end)
+        if callback then
+            callback()
+        end
+    end)
+    
+    return Button
+end
+
+return Linux
